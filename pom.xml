@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        The groupId must be a namespace verified on central.sonatype.com for the
+        account that publishes. io.github.dhairya-grid is the namespace Central
+        creates for the GitHub user dhairya-grid on signing in with GitHub.
+        Central does not offer io.github.<organization> namespaces, and
+        com.testinzone would need a DNS TXT record on a domain we do not own.
+    -->
+    <groupId>io.github.dhairya-grid</groupId>
+    <artifactId>central-sample</artifactId>
+    <!-- Central only takes release versions in a bundle; never -SNAPSHOT here. -->
+    <version>0.1.0</version>
+    <packaging>jar</packaging>
+
+    <!-- Central rejects a deployment that lacks any of the metadata below. -->
+    <name>Central sample</name>
+    <description>A minimal library used to prove the Maven Central publishing setup.</description>
+    <url>https://github.com/dhairya-grid/maven-central-sample</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>dhairya-grid</id>
+            <name>dhairya-grid</name>
+            <url>https://github.com/dhairya-grid</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/dhairya-grid/maven-central-sample</url>
+        <connection>scm:git:https://github.com/dhairya-grid/maven-central-sample.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/dhairya-grid/maven-central-sample.git</developerConnection>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>8</maven.compiler.release>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.16.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.6.0</version>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+            Everything Central requires beyond a normal build: sources and javadoc
+            jars, a GPG signature on every file, and the upload itself. Run with
+            -Prelease so day-to-day builds need no GPG key.
+        -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.4.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.12.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Lets CI pass the passphrase without a terminal. -->
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <!-- Matches the <server> id holding the Central Portal user token. -->
+                            <publishingServerId>central</publishingServerId>
+                            <!--
+                                Upload and validate, but stop before release: a person
+                                reviews the deployment on central.sonatype.com and presses
+                                Publish (or Drop). A published version can never be deleted.
+                            -->
+                            <autoPublish>false</autoPublish>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
